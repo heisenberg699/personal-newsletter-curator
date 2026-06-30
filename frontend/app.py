@@ -9,11 +9,14 @@
 #     streamlit run frontend/app.py
 # ----------------------------------------------------------
 
+import os
+
 import requests
 import streamlit as st
 
-# Where the backend lives. If you change the uvicorn port, change it here.
-import os
+# Where the backend lives. Locally this defaults to your uvicorn server.
+# On Render, set BACKEND_URL as an environment variable to your deployed
+# backend's URL so this app talks to the cloud API instead of localhost.
 API = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 
 st.set_page_config(page_title="Personal Newsletter Curator", page_icon="📰", layout="centered")
@@ -108,13 +111,39 @@ def login_screen():
 # ==========================================================
 
 def main_app():
-    # --- sidebar: who's logged in + logout + sources ---
+    # --- sidebar: who's logged in + logout + interests + sources ---
     with st.sidebar:
         st.write(f"Logged in as **{st.session_state.email}**")
         if st.button("Log out"):
             st.session_state.token = None
             st.session_state.email = None
             st.rerun()
+
+        st.divider()
+        st.subheader("Your interests")
+
+        # Pull the current interests from the server so the box
+        # always shows what's actually stored, not stale local state.
+        me = api_get("/me")
+        current_interests = me.json().get("interests_text", "") if me.status_code == 200 else ""
+
+        new_interests = st.text_area(
+            "What should your digest focus on?",
+            value=current_interests,
+            placeholder="e.g. AI, geopolitics, chess",
+            key="interests_box",
+        )
+        if st.button("💾 Save interests"):
+            r = requests.patch(
+                f"{API}/me/interests",
+                json={"interests_text": new_interests},
+                headers=auth_headers(),
+                timeout=30,
+            )
+            if r.status_code == 200:
+                st.success("Interests updated — click **Build new digest** to re-rank with these.")
+            else:
+                st.error(safe_detail(r, "Could not update interests"))
 
         st.divider()
         st.subheader("Your sources")
