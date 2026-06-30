@@ -1,0 +1,6 @@
+.env
+newsletter.db
+venv/
+__pycache__/
+*.pyc
+chroma_db/
