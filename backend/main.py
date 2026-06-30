@@ -30,6 +30,7 @@ from backend.schemas import (
     SourceCreate,
     SourceResponse,
     TokenResponse,
+    UpdateInterestsRequest,
     UserResponse,
 )
 
@@ -128,6 +129,24 @@ def read_me(current_user: User = Depends(get_current_user)):
     Test route for the token: returns the logged-in user's own details.
     If the token is missing/expired/forged, you get 401 instead.
     """
+    return current_user
+
+
+@app.patch("/me/interests", response_model=UserResponse)
+def update_interests(
+    body: UpdateInterestsRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Lets the user change their stated interests after signup.
+    No re-embedding is needed — stories are re-ranked fresh from
+    their stored vectors every time a digest is built, so the very
+    next 'Build new digest' click will use this new text.
+    """
+    current_user.interests_text = body.interests_text
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 
