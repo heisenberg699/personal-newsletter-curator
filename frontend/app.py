@@ -13,7 +13,8 @@ import requests
 import streamlit as st
 
 # Where the backend lives. If you change the uvicorn port, change it here.
-API = "http://127.0.0.1:8000"
+import os
+API = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 
 st.set_page_config(page_title="Personal Newsletter Curator", page_icon="📰", layout="centered")
 
