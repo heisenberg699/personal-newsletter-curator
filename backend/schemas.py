@@ -39,6 +39,11 @@ class UserResponse(BaseModel):
         from_attributes = True   # lets Pydantic read directly from a SQLAlchemy object
 
 
+class UpdateInterestsRequest(BaseModel):
+    """Body of PATCH /me/interests"""
+    interests_text: str
+
+
 class SourceCreate(BaseModel):
     """Body of POST /sources"""
     type: str    # "rss", "reddit", or "hn"
